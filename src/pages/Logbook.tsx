@@ -765,7 +765,7 @@ export default function Logbook() {
           <div className="flex gap-2">
             <Button
               variant="destructive"
-              size="sm"
+              className="border-border/70 bg-card/30"
               onClick={async () => {
                 if (!confirm("确定要清空所有宏观记录吗？此操作不可撤销。")) return;
                 // 清空所有宏观记录
