@@ -762,23 +762,39 @@ export default function Logbook() {
             <div className="font-display text-xl">历史记录</div>
             <div className="text-sm text-muted-foreground mt-1">点击任意一行即可载入编辑。</div>
           </div>
-          <Button
-            variant="outline"
-            className="border-border/70 bg-card/30"
-            onClick={() => {
-              setDraft({
-                id: nanoid(),
-                date: todayYmd(),
-                n: 0,
-                themes: "",
-                notes: "",
-                nextPlan: "",
-                updatedAt: Date.now(),
-              });
-            }}
-          >
-            新建
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={async () => {
+                if (!confirm("确定要清空所有宏观记录吗？此操作不可撤销。")) return;
+                // 清空所有宏观记录
+                localStorage.removeItem("gem_review_records_v1");
+                // 刷新页面数据
+                await refresh();
+                toast.success("已清空所有宏观记录");
+              }}
+            >
+              清空全部
+            </Button>
+            <Button
+              variant="outline"
+              className="border-border/70 bg-card/30"
+              onClick={() => {
+                setDraft({
+                  id: nanoid(),
+                  date: todayYmd(),
+                  n: 0,
+                  themes: "",
+                  notes: "",
+                  nextPlan: "",
+                  updatedAt: Date.now(),
+                });
+              }}
+            >
+              新建
+            </Button>
+          </div>
         </div>
 
         <div className="mt-4 overflow-x-auto">
