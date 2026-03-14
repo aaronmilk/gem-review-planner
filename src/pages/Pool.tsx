@@ -6,11 +6,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { toast } from "sonner";
 import { buildPool, type PoolRow } from "@/lib/pool";
 
+type SortField = "streak" | "latestAmountYi" | "maxAmountYi" | "latestPct" | "latestDate";
+type SortDirection = "asc" | "desc";
+
 export default function Pool() {
   const [minAmount, setMinAmount] = useState(50);
   const [minStreak, setMinStreak] = useState(2);
   const [rows, setRows] = useState<PoolRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [sortField, setSortField] = useState<SortField>("streak");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
   async function refresh() {
     setLoading(true);
@@ -38,6 +43,60 @@ export default function Pool() {
       top: top ? `${top.name}（${top.code}）· 连续${top.streak}天 · 最新${top.latestAmountYi ?? "—"}亿` : "—",
     };
   }, [rows]);
+
+  const sortedRows = useMemo(() => {
+    return [...rows].sort((a, b) => {
+      let aVal: number | string | undefined;
+      let bVal: number | string | undefined;
+      switch (sortField) {
+        case "streak":
+          aVal = a.streak;
+          bVal = b.streak;
+          break;
+        case "latestAmountYi":
+          aVal = a.latestAmountYi;
+          bVal = b.latestAmountYi;
+          break;
+        case "maxAmountYi":
+          aVal = a.maxAmountYi;
+          bVal = b.maxAmountYi;
+          break;
+        case "latestPct":
+          aVal = a.latestPct;
+          bVal = b.latestPct;
+          break;
+        case "latestDate":
+          aVal = a.latestDate ?? "";
+          bVal = b.latestDate ?? "";
+          break;
+      }
+      if (aVal === undefined || aVal === null) aVal = -Infinity;
+      if (bVal === undefined || bVal === null) bVal = -Infinity;
+      if (typeof aVal === "string" && typeof bVal === "string") {
+        return sortDirection === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+      }
+      return sortDirection === "asc" ? (aVal as number) - (bVal as number) : (bVal as number) - (aVal as number);
+    });
+  }, [rows, sortField, sortDirection]);
+
+  function handleSort(field: SortField) {
+    if (sortField === field) {
+      setSortDirection((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(field);
+      setSortDirection("desc");
+    }
+  }
+
+  function SortIcon({ field }: { field: SortField }) {
+    const isActive = sortField === field;
+    return (
+      <span className={`ml-1 inline-flex flex-col ${isActive ? "text-primary" : "text-muted-foreground/50"}`}>
+        <span className={`text-[8px] leading-none ${isActive && sortDirection === "asc" ? "text-primary" : ""}`}>▲</span>
+        <span className={`text-[8px] leading-none ${isActive && sortDirection === "desc" ? "text-primary" : ""}`}>▼</span>
+      </span>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -119,16 +178,26 @@ export default function Pool() {
                 <TableHead>代码</TableHead>
                 <TableHead>名称</TableHead>
                 <TableHead>题材</TableHead>
-                <TableHead className="text-right">连续天数</TableHead>
-                <TableHead className="text-right">最新成交额(亿)</TableHead>
-                <TableHead className="text-right">最高成交额(亿)</TableHead>
-                <TableHead className="text-right">最新涨幅%</TableHead>
-                <TableHead>最新日期</TableHead>
+                <TableHead className="text-right cursor-pointer hover:text-primary" onClick={() => handleSort("streak")}>
+                  连续天数<SortIcon field="streak" />
+                </TableHead>
+                <TableHead className="text-right cursor-pointer hover:text-primary" onClick={() => handleSort("latestAmountYi")}>
+                  最新成交额(亿)<SortIcon field="latestAmountYi" />
+                </TableHead>
+                <TableHead className="text-right cursor-pointer hover:text-primary" onClick={() => handleSort("maxAmountYi")}>
+                  最高成交额(亿)<SortIcon field="maxAmountYi" />
+                </TableHead>
+                <TableHead className="text-right cursor-pointer hover:text-primary" onClick={() => handleSort("latestPct")}>
+                  最新涨幅%<SortIcon field="latestPct" />
+                </TableHead>
+                <TableHead className="cursor-pointer hover:text-primary" onClick={() => handleSort("latestDate")}>
+                  最新日期<SortIcon field="latestDate" />
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rows.length ? (
-                rows.map((r) => (
+              {sortedRows.length ? (
+                sortedRows.slice(0, 200).map((r) => (
                   <TableRow key={r.code}>
                     <TableCell className="font-mono-quant">{r.code}</TableCell>
                     <TableCell>{r.name}</TableCell>
