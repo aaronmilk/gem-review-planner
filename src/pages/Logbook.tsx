@@ -49,7 +49,7 @@ function todayYmd() {
 
 export default function Logbook() {
   const thresholds = loadThresholds();
-  const { records, remote, upsert, remove, fetchLatest } = useRecords();
+  const { records, remote, upsert, remove, fetchLatest, refresh } = useRecords();
 
   // 微观明细（Micro_Stocks）查看器
   const [microDate, setMicroDate] = useState(todayYmd());
