@@ -32,8 +32,10 @@ jobs:
 
       - name: Build
         env:
-          # 让 Vite 以 /<repo>/ 作为静态资源与路由基路径
           VITE_BASE: /${{ github.event.repository.name }}/
+          VITE_API_BASE: ${{ secrets.VITE_API_BASE }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         run: npm run build
 
       - name: Upload artifact

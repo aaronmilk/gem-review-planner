@@ -6,7 +6,7 @@ import {
   fetchLatestRemote,
   listRecordsRemote,
   upsertRecordRemote,
-} from "@/lib/api";
+} from "@/lib/storage";
 import { deleteRecord as deleteLocal, loadRecords, upsertRecord as upsertLocal } from "@/lib/storage";
 
 export function useRecords() {

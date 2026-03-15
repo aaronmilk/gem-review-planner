@@ -104,3 +104,139 @@ export function importJson(raw: string) {
   if (obj?.thresholds) saveThresholds(obj.thresholds);
   if (Array.isArray(obj?.records)) saveRecords(obj.records);
 }
+
+// ========== Supabase Remote API ==========
+
+function normalizeBase(base: string) {
+  return base.endsWith("/") ? base.slice(0, -1) : base;
+}
+
+export function getApiBase(): string | null {
+  const envBase = (import.meta as any).env?.VITE_API_BASE as string | undefined;
+  if (envBase && envBase.trim()) return normalizeBase(envBase.trim());
+
+  // Same-origin fallback（适合前后端走同一域名反代的场景）
+  // Zeabur 若未配置反代，建议显式设置 VITE_API_BASE
+  return null;
+}
+
+export function getSupabaseAnonKey(): string {
+  return (import.meta as any).env?.VITE_SUPABASE_ANON_KEY as string || "";
+}
+
+export function apiEnabled(): boolean {
+  return getApiBase() !== null;
+}
+
+// 转换蛇形命名到驼峰
+function snakeToCamel(r: any): DailyRecord {
+  return {
+    id: r.id,
+    date: r.date,
+    overlapRatio: r.overlap_ratio,
+    core100Count: r.core100_count,
+    resonance: r.resonance,
+    microStructure: r.micro_structure,
+    anomalySignal: r.anomaly_signal,
+    nextJudgement: r.next_judgement,
+    action: r.action,
+    n: r.n ?? 0,
+    stage: r.stage,
+    limitUp20Count: r.limit_up_20_count,
+    limitUp20Share: r.limit_up_20_share,
+    signals: r.signals,
+    primarySignalId: r.primary_signal_id,
+    meanAmtYi: r.mean_amt_yi,
+    medianAmtYi: r.median_amt_yi,
+    midCoreMeanAmtYi: r.mid_core_mean_amt_yi,
+    midCoreMedianAmtYi: r.mid_core_median_amt_yi,
+    themes: r.themes,
+    notes: r.notes,
+    nextPlan: r.next_plan,
+    updatedAt: r.updated_at,
+  };
+}
+
+// 转换驼峰到蛇形
+function camelToSnake(rec: DailyRecord): any {
+  return {
+    id: rec.id,
+    date: rec.date,
+    overlap_ratio: rec.overlapRatio,
+    core100_count: rec.core100Count,
+    resonance: rec.resonance,
+    micro_structure: rec.microStructure,
+    anomaly_signal: rec.anomalySignal,
+    next_judgement: rec.nextJudgement,
+    action: rec.action,
+    n: rec.n,
+    stage: rec.stage,
+    limit_up_20_count: rec.limitUp20Count,
+    limit_up_20_share: rec.limitUp20Share,
+    signals: rec.signals,
+    primary_signal_id: rec.primarySignalId,
+    mean_amt_yi: rec.meanAmtYi,
+    median_amt_yi: rec.medianAmtYi,
+    mid_core_mean_amt_yi: rec.midCoreMeanAmtYi,
+    mid_core_median_amt_yi: rec.midCoreMedianAmtYi,
+    themes: rec.themes,
+    notes: rec.notes,
+    next_plan: rec.nextPlan,
+    updated_at: rec.updatedAt,
+  };
+}
+
+async function http<T>(path: string, init?: RequestInit): Promise<T> {
+  const base = getApiBase();
+  const anonKey = getSupabaseAnonKey();
+  const url = base ? `${base}${path}` : path;
+
+  const res = await fetch(url, {
+    ...init,
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": anonKey,
+      "Authorization": `Bearer ${anonKey}`,
+      ...(init?.headers ?? {}),
+    },
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`HTTP ${res.status} ${res.statusText}: ${text}`);
+  }
+  // DELETE 请求可能返回空 body
+  if (res.status === 204 || res.headers.get("content-length") === "0") {
+    return {} as T;
+  }
+  return (await res.json()) as T;
+}
+
+export async function listRecordsRemote(): Promise<DailyRecord[]> {
+  // Supabase: GET /rest/v1/records?order=date.desc,updated_at.desc
+  const data = await http<any[]>("/records?order=date.desc&order=updated_at.desc");
+  return data.map(snakeToCamel);
+}
+
+export async function upsertRecordRemote(rec: DailyRecord): Promise<DailyRecord> {
+  // Supabase: POST /records (upsert with resolution=merge-duplicates)
+  return http<DailyRecord>("/records", {
+    method: "POST",
+    body: JSON.stringify(camelToSnake(rec)),
+    headers: {
+      "Prefer": "resolution=merge-duplicates",
+    },
+  });
+}
+
+export async function deleteRecordRemote(id: string): Promise<void> {
+  await http<{ ok: boolean }>(`/records?id=eq.${encodeURIComponent(id)}`, { method: "DELETE" });
+}
+
+export async function fetchLatestRemote(): Promise<DailyRecord> {
+  // Supabase 不支持服务端 fetch latest，这里返回最新一条记录
+  const data = await http<any[]>("/records?order=date.desc&limit=1");
+  if (!data || data.length === 0) {
+    throw new Error("No records found");
+  }
+  return snakeToCamel(data[0]);
+}
