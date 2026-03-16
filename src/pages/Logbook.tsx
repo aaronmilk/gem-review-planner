@@ -163,7 +163,7 @@ export default function Logbook() {
       // 注：导入时已经写入过，此按钮更像"确认/覆盖保存"。
       if (microMode === "all") {
         if (!microAllRows.length) {
-          toast.error("全部数据尚未加载：请先切到"全部数据"让它自动加载一次");
+          toast.error("全部数据尚未加载：请先切到\"全部数据\"让它自动加载一次");
           return;
         }
         await upsertMicroRows(microAllRows);
@@ -693,8 +693,8 @@ export default function Logbook() {
                                 await refreshMicro(microDate);
                                 // 同步刷新日期列表
                                 setMicroDates(await listMicroDates());
-                                // 如果在"全部数据"模式也刷新一下
-                                if (microMode === "all") await refreshMicroAll();
+                                // 刷新全部数据视图
+                                await refreshMicroAll();
                               } catch (e: any) {
                                 toast.error(e?.message ?? "删除失败");
                               }
