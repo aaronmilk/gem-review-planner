@@ -37,6 +37,7 @@ import {
   listMicroByDate,
   listMicroDates,
   findPrevMicroDate,
+  deleteMicroByDate,
   type MicroStockRow,
 } from "@/lib/microdb";
 import { deriveMacroFromMicroDate } from "@/lib/micro-derive";
@@ -65,7 +66,7 @@ export default function Logbook() {
   // 全量展示：多日罗列（按 date 倒序）
   const microAllView = useMemo(() => {
     if (!microAllRows.length) return [] as MicroStockRowView[];
-    // “全部数据”模式：直接展示全量（按日期倒序），不提供日期筛选，避免与“按日期”重复。
+    // "全部数据"模式：直接展示全量（按日期倒序），不提供日期筛选，避免与"按日期"重复。
     return microAllRows
       .slice()
       .sort((a, b) => (a.date === b.date ? a.code.localeCompare(b.code) : b.date.localeCompare(a.date)))
@@ -73,7 +74,7 @@ export default function Logbook() {
   }, [microAllRows]);
   const [microDates, setMicroDates] = useState<string[]>([]);
 
-  // 新面孔口径：对比最近 N 个“已导入日期”（不接入交易所日历）
+  // 新面孔口径：对比最近 N 个"已导入日期"（不接入交易所日历）
   const [newFaceLookback, setNewFaceLookback] = useState<1 | 3 | 5>(1);
 
 
@@ -82,7 +83,7 @@ export default function Logbook() {
     try {
       const rows = await listMicroByDate(d);
 
-      // 以“已导入数据”的日期序列为准（不接入交易所日历）
+      // 以"已导入数据"的日期序列为准（不接入交易所日历）
       const dates = await listMicroDates();
       setMicroDates(dates);
 
@@ -98,7 +99,7 @@ export default function Logbook() {
 
       const prevDate = await findPrevMicroDate(d);
 
-      // 自动新面孔：T 日 code 不在“最近 N 日集合”里
+      // 自动新面孔：T 日 code 不在"最近 N 日集合"里
       const withDerived = rows.map((r) => ({
         ...r,
         _isNewFaceAuto: prevDates.length ? !prevCodes.has(r.code) : null,
@@ -158,11 +159,11 @@ export default function Logbook() {
 
   async function saveMicroTable() {
     try {
-      // 这里的“保存微观”指把当前表格视图的数据（导入/加载后的）再次写入 IndexedDB。
-      // 注：导入时已经写入过，此按钮更像“确认/覆盖保存”。
+      // 这里的"保存微观"指把当前表格视图的数据（导入/加载后的）再次写入 IndexedDB。
+      // 注：导入时已经写入过，此按钮更像"确认/覆盖保存"。
       if (microMode === "all") {
         if (!microAllRows.length) {
-          toast.error("全部数据尚未加载：请先切到“全部数据”让它自动加载一次");
+          toast.error("全部数据尚未加载：请先切到"全部数据"让它自动加载一次");
           return;
         }
         await upsertMicroRows(microAllRows);
@@ -253,13 +254,13 @@ export default function Logbook() {
     // 如果之前有其他日期的数据，会保留下来
     await upsertMicroRows(rows);
 
-    // 导入后默认展示“最新日期”（避免用户导入了历史数据但仍停留在今天导致看起来像没导入）
+    // 导入后默认展示"最新日期"（避免用户导入了历史数据但仍停留在今天导致看起来像没导入）
     const latest = rows.reduce((acc, r) => (acc && acc > r.date ? acc : r.date), "");
-    toast.success(`已导入微观明细 ${rows.length} 条（IndexedDB），最新日期：${latest || "—"}`);
+    toast.success(`已导入微观明细 ${rows.length} 条（IndexedDB），最新日期：${latest || "-"}`);
     if (latest) {
       setMicroDate(latest);
-      // 默认刷新“最新日期”是为了让用户第一眼就看到数据；
-      // 但所有日期的数据都已写入 IndexedDB，可在“全部数据”或切换日期查看。
+      // 默认刷新"最新日期"是为了让用户第一眼就看到数据；
+      // 但所有日期的数据都已写入 IndexedDB，可在"全部数据"或切换日期查看。
       await refreshMicro(latest);
       // 同步刷新日期列表
       setMicroDates(await listMicroDates());
@@ -267,7 +268,7 @@ export default function Logbook() {
       await refreshMicro(microDate);
     }
 
-    // 如果用户当前在“全部数据”模式，也顺手刷新一次
+    // 如果用户当前在"全部数据"模式，也顺手刷新一次
     if (microMode === "all") await refreshMicroAll();
   }
 
@@ -441,7 +442,7 @@ export default function Logbook() {
             />
             <div className="mt-2 text-xs text-muted-foreground">
               自动阶段：<span className="text-primary font-semibold">{computedStage}</span>
-              <span className="ml-2">（可在“设置”调整阈值）</span>
+              <span className="ml-2">（可在"设置"调整阈值）</span>
             </div>
           </div>
 
@@ -463,7 +464,7 @@ export default function Logbook() {
                 className="bg-background/20 border-border/60 font-mono-quant"
               />
             </div>
-            <div className="mt-2 text-xs text-muted-foreground">导入CSV后会自动计算；手填时建议单位为“亿”。</div>
+            <div className="mt-2 text-xs text-muted-foreground">导入CSV后会自动计算；手填时建议单位为"亿"。</div>
           </div>
         </div>
 
@@ -510,7 +511,7 @@ export default function Logbook() {
         </div>
 
         <div className="mt-4">
-          <div className="text-xs text-muted-foreground">次日预案（可在“次日预案”自动生成后回填）</div>
+          <div className="text-xs text-muted-foreground">次日预案（可在"次日预案"自动生成后回填）</div>
           <Textarea
             value={draft.nextPlan ?? ""}
             onChange={(e) => setDraft((d) => ({ ...d, nextPlan: e.target.value }))}
@@ -562,7 +563,7 @@ export default function Logbook() {
                       setMicroMode("all");
                       // 全部数据模式：直接展示全量，不提供筛选
                       setMicroDate("");
-                      // 进入即加载（避免还要点“加载全部”）
+                      // 进入即加载（避免还要点"加载全部"）
                       if (!microAllRows.length) await refreshMicroAll();
                     }}
                   >
@@ -642,7 +643,7 @@ export default function Logbook() {
                             ...(existing ?? ({} as any)),
                             id,
                             date: d.date,
-                            // 若宏观 n 未填或为 0，则用微观明细条数兜底；否则保留用户的“不截断口径”n
+                            // 若宏观 n 未填或为 0，则用微观明细条数兜底；否则保留用户的"不截断口径"n
                             n: existing?.n && existing.n > 0 ? existing.n : d.n,
 
                             overlapRatio: d.overlapRatio ?? undefined,
@@ -650,7 +651,7 @@ export default function Logbook() {
                             resonance: d.resonance,
                             microStructure: d.microStructure,
 
-                            // 自动给一个“题材提示”，方便后续生成预案；你也可在宏观日表手工改
+                            // 自动给一个"题材提示"，方便后续生成预案；你也可在宏观日表手工改
                             themes: existing?.themes?.trim() ? existing.themes : topicTxt,
 
                             updatedAt: Date.now(),
@@ -664,6 +665,46 @@ export default function Logbook() {
                     >
                       用微观回填宏观
                     </Button>
+
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          删除当天
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="bg-card border-border/70">
+                        <DialogHeader>
+                          <DialogTitle>确认删除？</DialogTitle>
+                          <DialogDescription>
+                            将删除 {microDate} 的所有微观明细记录（{microRows.length} 条），此操作不可撤销。
+                          </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter>
+                          <Button
+                            variant="destructive"
+                            onClick={async () => {
+                              try {
+                                const count = await deleteMicroByDate(microDate);
+                                toast.success(`已删除 ${count} 条记录`);
+                                await refreshMicro(microDate);
+                                // 同步刷新日期列表
+                                setMicroDates(await listMicroDates());
+                                // 如果在"全部数据"模式也刷新一下
+                                if (microMode === "all") await refreshMicroAll();
+                              } catch (e: any) {
+                                toast.error(e?.message ?? "删除失败");
+                              }
+                            }}
+                          >
+                            删除
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
                   </>
                 ) : null}
               </div>
@@ -721,16 +762,16 @@ export default function Logbook() {
                           <TableCell className={r._isNewFaceAuto === false ? "text-red-400" : ""}>
                             {r.name}
                           </TableCell>
-                          <TableCell className="text-right font-mono-quant">{r.amountYi ?? "—"}</TableCell>
-                          <TableCell className="text-right font-mono-quant">{r.pct ?? "—"}</TableCell>
-                          <TableCell>{r.topic ?? "—"}</TableCell>
+                          <TableCell className="text-right font-mono-quant">{r.amountYi ?? "-"}</TableCell>
+                          <TableCell className="text-right font-mono-quant">{r.pct ?? "-"}</TableCell>
+                          <TableCell>{r.topic ?? "-"}</TableCell>
                           <TableCell>
                             {r._isNewFaceAuto === null ? (
                               <span className="text-muted-foreground">?</span>
                             ) : r._isNewFaceAuto ? (
                               "✓"
                             ) : (
-                              "—"
+                              "-"
                             )}
                           </TableCell>
                         </TableRow>
@@ -750,7 +791,7 @@ export default function Logbook() {
 
             {microMode === "all" && microAllRows.length > 2000 ? (
               <div className="mt-2 text-xs text-muted-foreground">
-                为避免页面卡顿，“全部数据”模式最多展示 2000 行。建议用日期筛选或后续我们加导出/分页。
+                为避免页面卡顿，"全部数据"模式最多展示 2000 行。建议用日期筛选或后续我们加导出/分页。
               </div>
             ) : null}
           </Card>
@@ -819,7 +860,7 @@ export default function Logbook() {
                     <TableCell className="font-mono-quant">{normalizeYmd(r.date)}</TableCell>
                     <TableCell className="text-right font-mono-quant">{r.n}</TableCell>
                     <TableCell>{stage}</TableCell>
-                    <TableCell className="text-right font-mono-quant">{r.limitUp20Count ?? "—"}</TableCell>
+                    <TableCell className="text-right font-mono-quant">{r.limitUp20Count ?? "-"}</TableCell>
                     <TableCell className="text-right font-mono-quant">{formatYi(r.meanAmtYi)}</TableCell>
                     <TableCell className="text-right font-mono-quant">{formatYi(r.medianAmtYi)}</TableCell>
                     <TableCell className="text-right">

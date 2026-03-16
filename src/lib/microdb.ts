@@ -101,3 +101,18 @@ export async function clearMicroAll() {
   await tx.store.clear();
   await tx.done;
 }
+
+/**
+ * 删除指定日期的所有微观明细记录
+ */
+export async function deleteMicroByDate(date: string): Promise<number> {
+  const d = await db();
+  const tx = d.transaction("micro_stocks", "readwrite");
+  const index = tx.store.index("by_date");
+  const keys = await index.getAllKeys(date);
+  for (const key of keys) {
+    await tx.store.delete(key);
+  }
+  await tx.done;
+  return keys.length;
+}
