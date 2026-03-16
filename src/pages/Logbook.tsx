@@ -669,8 +669,8 @@ export default function Logbook() {
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button
-                          variant="destructive"
-                          size="sm"
+                          variant="outline"
+                          className="border-border/70 bg-card/30"
                           onClick={(e) => e.stopPropagation()}
                         >
                           删除当天
@@ -711,13 +711,13 @@ export default function Logbook() {
             </div>
 
             <div className="mt-4 rounded-lg border border-border/60 bg-background/20 p-3 text-sm">
-              <div className="flex items-center justify-between gap-3 flex-wrap">
-                <div className="text-xs text-muted-foreground">
-                  {microMode === "all" ? "微观总条数（全部日期）" : "当前日期明细条数"}
-                </div>
-                <div className="font-mono-quant">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">
+                  {microMode === "all" ? "微观总条数（全部日期）" : "当前明细条数"}
+                </span>
+                <span className="font-mono-quant text-xs">
                   {microMode === "all" ? microAllRows.length : microRows.length}
-                </div>
+                </span>
               </div>
             </div>
 
