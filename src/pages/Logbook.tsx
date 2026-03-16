@@ -249,7 +249,8 @@ export default function Logbook() {
       return;
     }
 
-    await clearMicroAll();
+    // 修复：不再清空所有数据，而是逐条 upsert（keyPath=id 保证同日期同股票覆盖）
+    // 如果之前有其他日期的数据，会保留下来
     await upsertMicroRows(rows);
 
     // 导入后默认展示“最新日期”（避免用户导入了历史数据但仍停留在今天导致看起来像没导入）
