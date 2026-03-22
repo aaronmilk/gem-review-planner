@@ -84,7 +84,7 @@ export function lifeAnchorText(
   if (pools.midCore.length) pools.midCore.slice(0, 20).forEach((r) => lines.push(fmt(r)));
   else lines.push("- —");
   lines.push("");
-  lines.push("### ② 高标池（反复出现/高度票）");
+  lines.push("### ② 容量人气（非百亿成交的持续性人气股）");
   if (pools.highMark.length) pools.highMark.slice(0, 20).forEach((r) => lines.push(fmt(r)));
   else lines.push("- —");
 
