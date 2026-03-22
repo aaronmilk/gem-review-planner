@@ -13,7 +13,6 @@ export type DailyRecord = {
   nextJudgement?: string; // 强攻/进攻/观望/防守
   action?: string; // 执行动作（一句话）
 
-
   // Core
   n: number; // 当日符合核心启动信号的全部个数（不截断口径）
   stage?: Stage; // 可手工覆盖；默认根据阈值计算
@@ -41,7 +40,15 @@ export type DailyRecord = {
   midCoreMedianAmtYi?: number; // 容量中军样本中位数（亿）
 
   // Notes
-  themes?: string; // 题材/主线
+  themes?: string; // 题材/主线（可手填）
+
+  // Theme focus (derived from micro; user simplified rule)
+  focusThemes?: { topic: string; count: number }[]; // 当天日内重点题材（count>=2，且 topic!=未标注）
+  focusDrift?: "强延续" | "几日反复活跃" | "漂移明显" | "无重点题材";
+  focusOverlapT1?: { date: string; inter: number; union: number; jaccard: number } | null;
+  focusOverlapT3?: { date: string; inter: number; union: number; jaccard: number } | null;
+  focusOverlapT5?: { date: string; inter: number; union: number; jaccard: number } | null;
+
   notes?: string; // 当日复盘
   nextPlan?: string; // 次日预案（可自动生成后编辑）
 

@@ -211,6 +211,21 @@ export default function Plan() {
     const overlapPct = cands.overlapRatio === null ? "—" : `${Math.round(cands.overlapRatio * 100)}%`;
     const topTopicTxt = cands.topTopic ? `${cands.topTopic.topic}（${cands.topTopic.count}/${cands.nMicro}=${Math.round(cands.topTopic.ratio * 100)}%）` : "—";
 
+    const focusTxt = latest?.focusThemes?.length
+      ? latest.focusThemes.slice(0, 3).map((x) => `${x.topic}(${x.count})`).join("、")
+      : null;
+    const driftTxt = latest?.focusDrift ? `题材${latest.focusDrift}` : null;
+    const o1 = latest?.focusOverlapT1?.inter ? `T-1重叠 ${latest.focusOverlapT1.inter}` : null;
+    const o3 = latest?.focusOverlapT3?.inter ? `T-3重叠 ${latest.focusOverlapT3.inter}` : null;
+    const o5 = latest?.focusOverlapT5?.inter ? `T-5重叠 ${latest.focusOverlapT5.inter}` : null;
+    const focusLine = [
+      focusTxt ? `日内重点题材：**${focusTxt}**` : null,
+      driftTxt ? `**${driftTxt}**` : null,
+      [o1, o3, o5].filter(Boolean).length ? `（${[o1, o3, o5].filter(Boolean).join(" · ")}）` : null,
+    ]
+      .filter(Boolean)
+      .join(" ");
+
     const fmtRow = (r: any) => {
       const amt = r.amountYi !== undefined ? `${r.amountYi}亿` : "—";
       const t = r.topic ? String(r.topic) : "—";
@@ -226,7 +241,10 @@ export default function Plan() {
 
     const lines: string[] = [];
     lines.push("## 微观候选清单（自动）");
-    lines.push(`- 微观条数 n_micro：**${cands.nMicro}**；Overlap_Ratio：**${overlapPct}**；Top题材：**${topTopicTxt}**`);
+    lines.push(
+      `- 微观条数 n_micro：**${cands.nMicro}**；Overlap_Ratio：**${overlapPct}**；Top题材：**${topTopicTxt}**` +
+        (focusLine ? `\n- ${focusLine}` : "")
+    );
     if (cands.prevDate) lines.push(`- 对比基准：上一导入日 **${cands.prevDate}**`);
     lines.push("");
 
@@ -245,7 +263,7 @@ export default function Plan() {
     else lines.push("- —");
 
     return lines.join("\n");
-  }, [cands]);
+  }, [cands, latest?.focusThemes, latest?.focusDrift, latest?.focusOverlapT1, latest?.focusOverlapT3, latest?.focusOverlapT5]);
 
   return (
     <div className="space-y-6">

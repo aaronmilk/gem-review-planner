@@ -41,6 +41,8 @@ import {
   type MicroStockRow,
 } from "@/lib/microdb";
 import { deriveMacroFromMicroDate } from "@/lib/micro-derive";
+import { deriveThemeFocusSummary } from "@/lib/theme-focus";
+
 
 function todayYmd() {
   const d = new Date();
@@ -631,9 +633,17 @@ export default function Logbook() {
                           }
                           // 以 IndexedDB 为准（避免 UI 状态与真实库不一致）
                           const d = await deriveMacroFromMicroDate(microDate);
+                          const tf = await deriveThemeFocusSummary(microDate);
 
                           const existing = records.find((r) => r.date === d.date);
                           const id = existing?.id ?? `rec_${d.date}`;
+
+                          const focusTxt = tf.focusThemes?.length
+                            ? tf.focusThemes
+                                .slice(0, 3)
+                                .map((x) => `${x.topic}(${x.count})`)
+                                .join("、")
+                            : "";
 
                           const topicTxt = d.topTopic
                             ? `${d.topTopic.topic}（${d.topTopic.count}/${d.n}=${Math.round(d.topTopic.ratio * 100)}%）`
@@ -651,13 +661,20 @@ export default function Logbook() {
                             resonance: d.resonance,
                             microStructure: d.microStructure,
 
-                            // 自动给一个"题材提示"，方便后续生成预案；你也可在宏观日表手工改
-                            themes: existing?.themes?.trim() ? existing.themes : topicTxt,
+                            // 自动给一个"题材提示"（偏聚焦于“日内重点题材”）；你也可在宏观日表手工改
+                            themes: existing?.themes?.trim() ? existing.themes : (focusTxt || topicTxt),
+
+                            // 题材集中度（重点题材 + T-1/T-3/T-5 重叠/漂移）
+                            focusThemes: tf.focusThemes,
+                            focusDrift: tf.drift,
+                            focusOverlapT1: tf.overlapT1,
+                            focusOverlapT3: tf.overlapT3,
+                            focusOverlapT5: tf.overlapT5,
 
                             updatedAt: Date.now(),
                           });
 
-                          toast.success("已用微观明细回填宏观：Overlap/中军/共振/结构/题材提示");
+                          toast.success("已用微观明细回填宏观：Overlap/中军/共振/结构/题材(重点/漂移)");
                         } catch (e: any) {
                           toast.error(e?.message ?? "回填失败");
                         }

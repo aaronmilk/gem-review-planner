@@ -181,8 +181,14 @@ export default function Dashboard() {
       try {
         const c = await buildCandidateLists(latest.date);
         const overlapPct = c.overlapRatio === null ? "—" : `${Math.round(c.overlapRatio * 100)}%`;
+        const focusTxt = latest.focusThemes?.length
+          ? latest.focusThemes.slice(0, 3).map((x) => `${x.topic}(${x.count})`).join("、")
+          : null;
+        const driftTxt = latest.focusDrift ? ` · 题材${latest.focusDrift}` : "";
         const topTopic = c.topTopic ? `${c.topTopic.topic}（${Math.round(c.topTopic.ratio * 100)}%）` : "—";
-        setMicroHint(`Overlap ${overlapPct} · 中军≥100亿 ${c.core100.length} · 弹性 ${c.elastic.length} · Top题材 ${topTopic}`);
+        setMicroHint(
+          `Overlap ${overlapPct} · 中军≥100亿 ${c.core100.length} · 弹性 ${c.elastic.length} · 日内重点题材 ${focusTxt ?? topTopic}${driftTxt}`
+        );
       } catch {
         setMicroHint(null);
       }
