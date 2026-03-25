@@ -218,7 +218,7 @@ export default function Logbook() {
         })
         .filter(Boolean) as MicroStockRow[];
     } else {
-      const text = await file.text();
+      const text = (await file.text()).replace(/^\uFEFF/, "");
       // 简单 CSV：用 xlsx 解析更鲁棒
       const wb = XLSX.read(text, { type: "string" });
       const sheet = wb.Sheets[wb.SheetNames[0]];
