@@ -121,6 +121,27 @@ export default function Logbook() {
     return Number.isFinite(n) ? n : undefined;
   }
 
+  /** 解析带单位的金额字符串，如 "78.77亿" -> 78.77 */
+  function parseAmt(v: any): number | undefined {
+    if (v === null || v === undefined || v === "") return undefined;
+    const t = String(v).trim();
+    if (!t) return undefined;
+    const m = t.match(/([-+]?\d*\.?\d+)\s*亿/);
+    if (m) return Number(m[1]);
+    const asNum = Number(t);
+    return Number.isFinite(asNum) ? asNum : undefined;
+  }
+
+  /** 解析带单位的百分比字符串，如 "17.76%" -> 17.76 */
+  function parsePct(v: any): number | undefined {
+    if (v === null || v === undefined || v === "") return undefined;
+    const t = String(v).trim();
+    if (!t) return undefined;
+    const m = t.match(/([-+]?\d*\.?\d+)\s*%/);
+    if (m) return Number(m[1]);
+    return toNum(t);
+  }
+
   function toYmd(v: any): string {
     if (v === null || v === undefined || v === "") return "";
 
@@ -201,8 +222,8 @@ export default function Logbook() {
           const code = String(r["代码"] ?? r["code"] ?? "").trim();
           const name = String(r["名称"] ?? r["name"] ?? "").trim();
           if (!date || !code) return null;
-          const amountYi = toNum(r["成交额_亿"] ?? r["成交额"] ?? r["amountYi"]);
-          const pct = toNum(r["涨幅(%)"] ?? r["涨幅"] ?? r["pct"]);
+          const amountYi = parseAmt(r["成交额_亿"] ?? r["成交额"] ?? r["amountYi"]);
+          const pct = parsePct(r["涨幅(%)"] ?? r["涨跌幅"] ?? r["涨幅"] ?? r["pct"]);
           const topic = r["题材"] ?? r["topic"];
           const isNewFace = r["是否新面孔"] ?? r["isNewFace"];
           return {
@@ -229,8 +250,8 @@ export default function Logbook() {
           const code = String(r["代码"] ?? r["code"] ?? "").trim();
           const name = String(r["名称"] ?? r["name"] ?? "").trim();
           if (!date || !code) return null;
-          const amountYi = toNum(r["成交额_亿"] ?? r["成交额"] ?? r["amountYi"]);
-          const pct = toNum(r["涨幅(%)"] ?? r["涨幅"] ?? r["pct"]);
+          const amountYi = parseAmt(r["成交额_亿"] ?? r["成交额"] ?? r["amountYi"]);
+          const pct = parsePct(r["涨幅(%)"] ?? r["涨跌幅"] ?? r["涨幅"] ?? r["pct"]);
           const topic = r["题材"] ?? r["topic"];
           const isNewFace = r["是否新面孔"] ?? r["isNewFace"];
           return {
