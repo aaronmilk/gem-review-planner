@@ -490,19 +490,7 @@ export default function Logbook() {
             <div className="mt-2 text-xs text-muted-foreground">导入CSV后会自动计算；手填时建议单位为"亿"。</div>
           </div>
 
-          {/* TODO: 调试用，n<=p25时冰点龙才显示 */}
-          <div className="text-xs text-orange-400">🔍 [调试] n={draft.n} p25={thresholds.p25} show={draft.n <= (thresholds.p25 ?? 3)}</div>
-          {draft.n <= (thresholds.p25 ?? 3) && (
-            <div>
-              <div className="text-xs text-muted-foreground">冰点龙（手动填写）</div>
-              <Input
-                value={draft.iceDragon ?? ""}
-                onChange={(e) => setDraft((d) => ({ ...d, iceDragon: e.target.value }))}
-                placeholder="冰点阶段手动记录"
-                className="mt-2 bg-background/20 border-border/60"
-              />
-            </div>
-          )}
+
         </div>
 
         <div className="mt-4 grid gap-4 md:grid-cols-2">
