@@ -54,8 +54,18 @@ export default function Logbook() {
   const thresholds = loadThresholds();
   const { records, remote, upsert, remove, fetchLatest, refresh } = useRecords();
 
-  // 冰点龙编辑态（recordId -> 当前输入值）
-  const [iceDragonDraft, setIceDragonDraft] = useState<Record<string, string>>({});
+  // 冰点龙：独立存储（不走 record upsert，避免污染）
+  const ICE_KEY = "gem_review_ice_dragon_v1";
+  const [iceMap, setIceMap] = useState<Record<string, string>>(() => {
+    try { return JSON.parse(localStorage.getItem(ICE_KEY) ?? "{}"); }
+    catch { return {}; }
+  });
+
+  function saveIce(id: string, val: string) {
+    const next = { ...iceMap, [id]: val };
+    setIceMap(next);
+    localStorage.setItem(ICE_KEY, JSON.stringify(next));
+  }
 
   // 微观明细（Micro_Stocks）查看器
   const [microDate, setMicroDate] = useState(todayYmd());
@@ -913,17 +923,13 @@ export default function Logbook() {
                       <TableCell className="text-right">
                         {r.n <= thresholds.p25 ? (
                           <Input
-                            value={iceDragonDraft[r.id] ?? r.iceDragon ?? ""}
+                            value={iceMap[r.id] ?? ""}
                             placeholder="—"
                             className="h-7 w-28 text-right bg-background/20 border-border/60 font-mono-quant"
-                            onChange={async (e) => {
-                              const val = e.target.value;
-                              setIceDragonDraft((d) => ({ ...d, [r.id]: val }));
-                              await upsert({ ...r, iceDragon: val || undefined });
-                            }}
+                            onChange={(e) => saveIce(r.id, e.target.value)}
                           />
                         ) : (
-                          <span className="font-mono-quant">{r.iceDragon ?? "-"}</span>
+                          <span className="font-mono-quant">{iceMap[r.id] ?? "-"}</span>
                         )}
                       </TableCell>
                     )}
