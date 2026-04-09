@@ -489,6 +489,18 @@ export default function Logbook() {
             </div>
             <div className="mt-2 text-xs text-muted-foreground">导入CSV后会自动计算；手填时建议单位为"亿"。</div>
           </div>
+
+          {computedStage === "冰点" && (
+            <div>
+              <div className="text-xs text-muted-foreground">冰点龙（手动填写）</div>
+              <Input
+                value={draft.iceDragon ?? ""}
+                onChange={(e) => setDraft((d) => ({ ...d, iceDragon: e.target.value }))}
+                placeholder="冰点阶段手动记录"
+                className="mt-2 bg-background/20 border-border/60"
+              />
+            </div>
+          )}
         </div>
 
         <div className="mt-4 grid gap-4 md:grid-cols-2">
@@ -887,6 +899,9 @@ export default function Logbook() {
                 <TableHead className="text-right">20cm涨停</TableHead>
                 <TableHead className="text-right">均值成交额</TableHead>
                 <TableHead className="text-right">中位数成交额</TableHead>
+                {records.some((r) => r.n <= thresholds.p25) && (
+                  <TableHead className="text-right">冰点龙</TableHead>
+                )}
                 <TableHead className="text-right">操作</TableHead>
               </TableRow>
             </TableHeader>
@@ -901,6 +916,9 @@ export default function Logbook() {
                     <TableCell className="text-right font-mono-quant">{r.limitUp20Count ?? "-"}</TableCell>
                     <TableCell className="text-right font-mono-quant">{formatYi(r.meanAmtYi)}</TableCell>
                     <TableCell className="text-right font-mono-quant">{formatYi(r.medianAmtYi)}</TableCell>
+                    {records.some((rec) => rec.n <= thresholds.p25) && (
+                      <TableCell className="text-right font-mono-quant">{r.iceDragon ?? "-"}</TableCell>
+                    )}
                     <TableCell className="text-right">
                       <Dialog>
                         <DialogTrigger asChild>

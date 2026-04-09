@@ -35,6 +35,8 @@ export type DailyRecord = {
   meanAmtYi?: number; // 全部启动信号单条成交额均值（亿）
   medianAmtYi?: number; // 全部启动信号单条成交额中位数（亿）
 
+  iceDragon?: string; // 冰点龙（手动填写，n阶段≤3时启用）
+
   // Middle cores
   midCoreMeanAmtYi?: number; // 容量中军样本均值（亿）
   midCoreMedianAmtYi?: number; // 容量中军样本中位数（亿）
