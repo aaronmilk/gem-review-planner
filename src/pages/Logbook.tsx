@@ -907,7 +907,23 @@ export default function Logbook() {
                     <TableCell className="text-right font-mono-quant">{formatYi(r.meanAmtYi)}</TableCell>
                     <TableCell className="text-right font-mono-quant">{formatYi(r.medianAmtYi)}</TableCell>
                     {records.some((rec) => rec.n <= thresholds.p25) && (
-                      <TableCell className="text-right font-mono-quant">{r.iceDragon ?? "-"}</TableCell>
+                      <TableCell className="text-right">
+                        {r.n <= thresholds.p25 ? (
+                          <Input
+                            value={r.iceDragon ?? ""}
+                            placeholder="—"
+                            className="h-7 w-28 text-right bg-background/20 border-border/60 font-mono-quant"
+                            onBlur={async (e) => {
+                              const val = e.target.value.trim();
+                              const updated = { ...r, iceDragon: val || undefined };
+                              await upsert(updated);
+                              await refresh();
+                            }}
+                          />
+                        ) : (
+                          <span className="font-mono-quant">{r.iceDragon ?? "-"}</span>
+                        )}
+                      </TableCell>
                     )}
                     <TableCell className="text-right">
                       <Dialog>
