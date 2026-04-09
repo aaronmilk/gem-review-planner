@@ -490,7 +490,7 @@ export default function Logbook() {
             <div className="mt-2 text-xs text-muted-foreground">导入CSV后会自动计算；手填时建议单位为"亿"。</div>
           </div>
 
-          {computedStage === "冰点" && (
+          {draft.n <= thresholds.p25 && (
             <div>
               <div className="text-xs text-muted-foreground">冰点龙（手动填写）</div>
               <Input
