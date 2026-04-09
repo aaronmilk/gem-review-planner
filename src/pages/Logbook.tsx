@@ -916,25 +916,10 @@ export default function Logbook() {
                             value={iceDragonDraft[r.id] ?? r.iceDragon ?? ""}
                             placeholder="—"
                             className="h-7 w-28 text-right bg-background/20 border-border/60 font-mono-quant"
-                            onChange={(e) =>
-                              setIceDragonDraft((d) => ({ ...d, [r.id]: e.target.value }))
-                            }
-                            onBlur={async (e) => {
-                              const val = e.target.value.trim();
-                              const updated = { ...r, iceDragon: val || undefined };
-                              console.log("[iceDragon] saving", { id: updated.id, iceDragon: updated.iceDragon });
-                              try {
-                                await upsert(updated);
-                                console.log("[iceDragon] upsert done, id=", updated.id);
-                              } catch (err) {
-                                console.error("[iceDragon] upsert failed", err);
-                              }
-                              setIceDragonDraft((d) => {
-                                const next = { ...d };
-                                delete next[r.id];
-                                return next;
-                              });
-                              await refresh();
+                            onChange={async (e) => {
+                              const val = e.target.value;
+                              setIceDragonDraft((d) => ({ ...d, [r.id]: val }));
+                              await upsert({ ...r, iceDragon: val || undefined });
                             }}
                           />
                         ) : (
