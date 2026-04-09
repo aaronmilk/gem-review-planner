@@ -54,6 +54,9 @@ export default function Logbook() {
   const thresholds = loadThresholds();
   const { records, remote, upsert, remove, fetchLatest, refresh } = useRecords();
 
+  // 冰点龙编辑态（recordId -> 当前输入值）
+  const [iceDragonDraft, setIceDragonDraft] = useState<Record<string, string>>({});
+
   // 微观明细（Micro_Stocks）查看器
   const [microDate, setMicroDate] = useState(todayYmd());
   type MicroStockRowView = MicroStockRow & { _isNewFaceAuto?: boolean | null; _prevDate?: string | null };
@@ -910,13 +913,21 @@ export default function Logbook() {
                       <TableCell className="text-right">
                         {r.n <= thresholds.p25 ? (
                           <Input
-                            value={r.iceDragon ?? ""}
+                            value={iceDragonDraft[r.id] ?? r.iceDragon ?? ""}
                             placeholder="—"
                             className="h-7 w-28 text-right bg-background/20 border-border/60 font-mono-quant"
+                            onChange={(e) =>
+                              setIceDragonDraft((d) => ({ ...d, [r.id]: e.target.value }))
+                            }
                             onBlur={async (e) => {
                               const val = e.target.value.trim();
                               const updated = { ...r, iceDragon: val || undefined };
                               await upsert(updated);
+                              setIceDragonDraft((d) => {
+                                const next = { ...d };
+                                delete next[r.id];
+                                return next;
+                              });
                               await refresh();
                             }}
                           />
