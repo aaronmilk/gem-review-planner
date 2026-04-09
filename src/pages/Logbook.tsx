@@ -922,7 +922,13 @@ export default function Logbook() {
                             onBlur={async (e) => {
                               const val = e.target.value.trim();
                               const updated = { ...r, iceDragon: val || undefined };
-                              await upsert(updated);
+                              console.log("[iceDragon] saving", { id: updated.id, iceDragon: updated.iceDragon });
+                              try {
+                                await upsert(updated);
+                                console.log("[iceDragon] upsert done, id=", updated.id);
+                              } catch (err) {
+                                console.error("[iceDragon] upsert failed", err);
+                              }
                               setIceDragonDraft((d) => {
                                 const next = { ...d };
                                 delete next[r.id];
